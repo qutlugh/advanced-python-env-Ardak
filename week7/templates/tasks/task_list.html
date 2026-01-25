@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Task List - To-Do App{% endblock %}
+
+{% block content %}
+<header>
+    <h1>✓ My To-Do List</h1>
+    {% if total_count > 0 %}
+    <div class="stats">
+        <div class="stat-item">
+            <span class="stat-label">Total Tasks:</span>
+            <span>{{ total_count }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Completed:</span>
+            <span>{{ completed_count }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Remaining:</span>
+            <span>{{ total_count|add:completed_count|add:0 }}</span>
+        </div>
+    </div>
+    {% endif %}
+</header>
+
+<div class="btn-container">
+    <a href="{% url 'task_create' %}" class="btn btn-primary">+ New Task</a>
+</div>
+
+{% if tasks %}
+<ul class="task-list">
+    {% for task in tasks %}
+    <li class="task-item {% if task.is_completed %}completed{% endif %}">
+        <div class="task-content">
+            <div class="task-status {% if task.is_completed %}status-completed{% else %}status-pending{% endif %}">
+                {% if task.is_completed %}✓ Completed{% else %}◯ Pending{% endif %}
+            </div>
+            <div class="task-title">{{ task.title }}</div>
+            {% if task.description %}
+            <div class="task-description">{{ task.description }}</div>
+            {% endif %}
+            <div class="task-date">Created: {{ task.created_at|date:"M d, Y - g:i A" }}</div>
+        </div>
+        <div class="task-actions">
+            <form method="post" action="{% url 'task_toggle' task.pk %}" class="toggle-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success" title="Toggle completion status">
+                    {% if task.is_completed %}Undo{% else %}Complete{% endif %}
+                </button>
+            </form>
+            <a href="{% url 'task_edit' task.pk %}" class="btn btn-warning">Edit</a>
+            <a href="{% url 'task_delete' task.pk %}" class="btn btn-danger">Delete</a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page=1">First</a>
+    <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+    <span class="current">{{ num }}</span>
+    {% else %}
+    <a href="?page={{ num }}">{{ num }}</a>
+    {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}">Next</a>
+    <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+    {% endif %}
+</div>
+{% endif %}
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">📝</div>
+    <h2>No tasks yet!</h2>
+    <p>Create your first task to get started.</p>
+    <div class="btn-container">
+        <a href="{% url 'task_create' %}" class="btn btn-primary">Create Task</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
